@@ -1,8 +1,7 @@
 import math
 import random as rn
 import pandas as pd
-import seaborn as sns
-
+import numpy as np
 
 dataFrame = pd.read_csv(r'Spotify_Youtube.csv')
 
@@ -39,6 +38,7 @@ class ProcessingData:
             for i in range(len(x)):
                 x.at[i, column] = (x.at[i, column] - mini) / (maxi - mini)
 
+
 class KNN:
     @staticmethod
     def distance(baza, v):
@@ -51,67 +51,37 @@ class KNN:
         return dist
 
     @staticmethod
-    def adddistance(baza, dist): #dodanie kolumny distance
+    def adddistance(baza, dist):  # dodanie kolumny distance
         baza["distance"] = dist
 
     @staticmethod
-    def dropdistance(baza): #usuniecie kolumny distance
+    def dropdistance(baza):  # usuniecie kolumny distance
         baza.drop(columns=["distance"])
 
-
-
     @staticmethod
-    def sort(baza, lewa, prawa): #sortowanie
-        if lewa < prawa:
-            pivot = baza.iloc[prawa][5]
-            j = lewa
-            for i in range(lewa, prawa):
-                if baza.iloc[i][5] < pivot:
-                    baza.iloc[j], baza.iloc[i] = baza.iloc[i], baza.iloc[j]
-                    j += 1
-            baza.iloc[j], baza.iloc[prawa] = baza.iloc[prawa], baza.iloc[j]
-            KNN.sort(baza, lewa, j - 1)
-            KNN.sort(baza, j + 1, prawa)
-
-    @staticmethod
-    def algorithm(baza, v):
-        dist=KNN.distance(baza, v) # liczymy dystans
-        KNN.adddistance(baza, dist) #dodajemy kolumne z dystansem
-        #KNN.sort(baza, 0, len(baza)-1)
+    def algorithm(baza, v, user_string_data):
+        dist = KNN.distance(baza, v)  # liczymy dystans
+        KNN.adddistance(baza, dist)  # dodajemy kolumne z dystansem
+        # KNN.sort(baza, 0, len(baza)-1)
         baza = baza.sort_values(by="distance")
         print(baza.head())
         print(f"Na podstawie utworu: {v[1]}, autorstwa: {v[0]}, mogą ci się spodobać następjące utwory:")
+        indexes_to_erase = []
         for i in range(1, 6):
-            print(f"{i}. Utwór: {baza.iloc[i][1]}, Autor: {baza.iloc[i][0]}")
-        KNN.dropdistance(baza) #usuwamy dystans zeby potem znowu moc dodac
-
-        # @staticmethod
-        # def knn_algorithm(baza, k=4):
-        #     ProcessingData.shuffle(baza)
-        #     ProcessingData.normalization(baza)
-        #     irisTrainMain, irisTest = ProcessingData.split(iris, 0.7)
-        #
-        #     iloscDobrych = 0
-        #     for i in range(len(irisTest)):
-        #         irisTrain = irisTrainMain.copy()
-        #         v = irisTest.iloc[i][0:4]
-        #         dist = KNN.distance(irisTrain, v)
-        #         KNN.adddistance(irisTrain, dist)
-        #         KNN.sort(irisTrain, 0, len(irisTrain) - 1)
-        #         if KNN.check(irisTrain, k) == irisTest.iloc[i][4]:
-        #             iloscDobrych += 1
-        #         print(i)
-        #
-        #     print(f"Skutecznosc = {iloscDobrych / len(irisTest) * 100}%")
+            track = baza.iloc[i]
+            print(f"{i}. Utwór: {track[1]}, Autor: {track[0]}")
+            if track[1].lower().replace(" ", "") not in user_string_data:
+                baza = baza.drop(INDEX, axis=0) # usuwanie utworu ktory nie jest podany dalej przez uzytkownika
+        baza = baza.drop(INDEX, axis=0) # usuwanie utworu ktory teraz byl podany do sprawdzenia
+        KNN.dropdistance(baza)  # usuwamy dystans zeby potem znowu moc dodac
+        return baza
 
 
 def get_user_prompt(listOfTracks):
     user_string_data = []
     doContinue = True
     while doContinue:
-        # artist = input("Proszę podać artystę: ").lower().replace(" ", "")
         song = input("Proszę podać tytuł utworu: ").lower().replace(" ", "")
-        # user_string_data.append([artist, song])
         if song in listOfTracks:
             if song not in user_string_data:
                 user_string_data.append(song)
@@ -124,30 +94,24 @@ def get_user_prompt(listOfTracks):
 
 
 def main():
-    music_data = pd.read_csv('Spotify_Youtube.csv') #wczytanie bazy
-    music_data_transformed = ProcessingData.transformate(music_data) #usuniecie kolumn ktorych nie uzyjemy
-    ProcessingData.normalization(music_data_transformed) #normalizacja bazy
-    listOfTracks = ProcessingData.createlist(music_data_transformed)
-    print("Witaj w aplikacji do rekomendacji muzyki!") #chico mexicano
-    user_string_data = get_user_prompt(listOfTracks) #pobranie danych od uzytkownika
+    music_data = pd.read_csv('Spotify_Youtube.csv')  # wczytanie bazy
+    music_data_transformed = ProcessingData.transformate(music_data)  # usuniecie kolumn ktorych nie uzyjemy
+    ProcessingData.normalization(music_data_transformed)  # normalizacja bazy
+    listOfTracks = ProcessingData.createlist(music_data_transformed)  # stworzenie listy utworow
+    print("Witaj w aplikacji do rekomendacji muzyki!")
+    user_string_data = get_user_prompt(listOfTracks)  # pobranie danych od uzytkownika
 
     for track in user_string_data:
-        index=listOfTracks.index(track)
-        v=music_data_transformed.iloc[index][:]
-        KNN.algorithm(music_data_transformed, v)
-        music_data_transformed.drop(range(6))
+        index = listOfTracks.index(track)
+        v = music_data_transformed.iloc[index][:]
+        music_data_transformed = KNN.algorithm(music_data_transformed, v, user_string_data)
+
         listOfTracks = ProcessingData.createlist(music_data_transformed)
-'''
-    for track in user_string_data:
-        KNN(track) #jescze nie zrobione, ale moze cos na zasadzie ze knn zwraca stringa:
-                   #na podstawie utworu 'tytul' autorstwa 'artysta' podajemy 5 utworow ktore moga ci sie spodobac
-                   #1. tytul: 'tytul', artysta: 'artysta' itd...
-                    index = listOfTracks.index(track)  # index danego utworu
-                    music_data_transformed.drop(index)  # usuniecie rzedu danego utworu(zrobic to w knn)
 
-        #ogolnie ten caly knn to sie jeszcze cos wymysli
-'''
 
 main()
-
-
+# music_data = pd.read_csv('Spotify_Youtube.csv')
+# music_data_transformed = ProcessingData.transformate(music_data)
+# print(music_data_transformed.head())
+# #music_data_transformed.iloc[0] , music_data_transformed.iloc[1] = music_data_transformed.iloc[1] , music_data_transformed.iloc[0]
+# print(music_data_transformed.head())
