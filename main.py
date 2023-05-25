@@ -22,10 +22,8 @@ class ProcessingData:
         return [track.lower().replace(" ", "") for track in listOfTracks]  # nazwy utworow do malych liter
 
     @staticmethod
-    def shuffle(x):
-        for i in range(len(x) - 1, 0, -1):
-            j = rn.randint(0, i - 1)
-            x.iloc[i], x.iloc[j] = x.iloc[j], x.iloc[i]
+    def addIndex(baza):
+        baza["index"] = [i for i in range(len(baza))]
 
     @staticmethod
     def normalization(x):  # normalizacja 'transformowanej' bazy
@@ -59,7 +57,11 @@ class KNN:
         baza.drop(columns=["distance"])
 
     @staticmethod
-    def algorithm(baza, v, user_string_data):
+    def algorithm(baza, index, user_string_data):
+
+        #ProcessingData.addIndex(baza) # dodajemy kolumne z indeksami
+        v = baza.iloc[index]
+        #print(v.iloc[12])
         dist = KNN.distance(baza, v)  # liczymy dystans
         KNN.adddistance(baza, dist)  # dodajemy kolumne z dystansem
         # KNN.sort(baza, 0, len(baza)-1)
@@ -71,8 +73,12 @@ class KNN:
             track = baza.iloc[i]
             print(f"{i}. Utwór: {track[1]}, Autor: {track[0]}")
             if track[1].lower().replace(" ", "") not in user_string_data:
-                baza = baza.drop(INDEX, axis=0) # usuwanie utworu ktory nie jest podany dalej przez uzytkownika
-        baza = baza.drop(INDEX, axis=0) # usuwanie utworu ktory teraz byl podany do sprawdzenia
+                print("lol")
+                indexes_to_erase.append(track.iloc[12])
+                #baza = baza.drop(track.iloc[12], axis=0) # usuwanie utworu ktory nie jest podany dalej przez uzytkownika
+        for index in indexes_to_erase:
+            baza = baza.drop(index, axis=0) # usuwamy wszystkie utwory ktore nie sa na liscie podanych przez uzytkownika
+        baza = baza.drop(v.iloc[12], axis=0) # usuwanie utworu ktory teraz byl podany do sprawdzenia
         KNN.dropdistance(baza)  # usuwamy dystans zeby potem znowu moc dodac
         return baza
 
@@ -100,11 +106,12 @@ def main():
     listOfTracks = ProcessingData.createlist(music_data_transformed)  # stworzenie listy utworow
     print("Witaj w aplikacji do rekomendacji muzyki!")
     user_string_data = get_user_prompt(listOfTracks)  # pobranie danych od uzytkownika
+    ProcessingData.addIndex(music_data_transformed) # dodajemy kolumne z indeksami
 
     for track in user_string_data:
         index = listOfTracks.index(track)
-        v = music_data_transformed.iloc[index][:]
-        music_data_transformed = KNN.algorithm(music_data_transformed, v, user_string_data)
+        #v = music_data_transformed.iloc[index]
+        music_data_transformed = KNN.algorithm(music_data_transformed, index, user_string_data)
 
         listOfTracks = ProcessingData.createlist(music_data_transformed)
 
