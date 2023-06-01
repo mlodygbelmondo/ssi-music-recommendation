@@ -28,7 +28,7 @@ class ProcessingData:
     @staticmethod
     def normalization(x):  # normalizacja 'transformowanej' bazy
         for column in x.columns:
-            if column in ["Artist", "Track"]:
+            if column in ["Artist", "Track", "index"]:#ddddddddddddddddddddddddddddddddddddddd
                 continue
             lista = list(x.loc[:, column])
             mini = min(lista)
@@ -69,9 +69,18 @@ class KNN:
         print(baza.head())
         print(f"Na podstawie utworu: {v[1]}, autorstwa: {v[0]}, mogą ci się spodobać następjące utwory:")
         indexes_to_erase = []
+        j=1
         for i in range(1, 6):
-            track = baza.iloc[i]
-            print(f"{i}. Utwór: {track[1]}, Autor: {track[0]}")
+            track = baza.iloc[j]
+            if track[1].lower().replace(" ", "") not in user_string_data: #if zeby sprawdzic czy proponowana piosenka nie jest podana przez uzytkownika
+                print(f"{i}. Utwór: {track[1]}, Autor: {track[0]}")
+                j+=1
+            else:
+                j+=1
+                track = baza.iloc[j]
+                print(f"{i}. Utwór: {track[1]}, Autor: {track[0]}")
+                j+=1
+
             if track[1].lower().replace(" ", "") not in user_string_data:
                 print("lol")
                 indexes_to_erase.append(track.iloc[12])
