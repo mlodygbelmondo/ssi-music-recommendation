@@ -66,7 +66,7 @@ class KNN:
         KNN.adddistance(baza, dist)  # dodajemy kolumne z dystansem
         # KNN.sort(baza, 0, len(baza)-1)
         baza = baza.sort_values(by="distance")
-        print(baza.head())
+        #print(baza.head())
         print(f"Na podstawie utworu: {v[1]}, autorstwa: {v[0]}, mogą ci się spodobać następjące utwory:")
         indexes_to_erase = []
         j=1
@@ -81,8 +81,8 @@ class KNN:
                 print(f"{i}. Utwór: {track[1]}, Autor: {track[0]}")
                 j+=1
 
-            if track[1].lower().replace(" ", "") not in user_string_data:
-                print("lol")
+            if track[1].lower().replace(" ", "") not in user_string_data:#ddddddddddddddddddddddddddddd raczej ifa mozna usunac
+                #print("lol")
                 indexes_to_erase.append(track.iloc[12])
                 #baza = baza.drop(track.iloc[12], axis=0) # usuwanie utworu ktory nie jest podany dalej przez uzytkownika
         for index in indexes_to_erase:
@@ -101,7 +101,7 @@ def get_user_prompt(listOfTracks):
             if song not in user_string_data:
                 user_string_data.append(song)
             else:
-                print("Ten utwór został już podany.")
+                print("Ten utwór został już przez ciebie podany.")
         else:
             print("Brak podanego tytułu w naszej bazie.")
         doContinue = input("Czy chcesz dodać kolejny utwór? (t/n): ").lower() == "t"
